@@ -18,6 +18,9 @@ class Population(NamedTuple):
             fox_count=self.fox_count / other,
         )
 
+    def __str__(self):
+        return f"{self.rabbit_count} rabbit(s) and {self.fox_count} fox(es)"
+
 
 def get_population_count(initial_population: Population, days: int) -> Population:
     """
