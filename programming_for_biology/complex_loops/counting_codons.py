@@ -11,7 +11,8 @@ def generate_codons():
 
 def count_codons_up_to(combination_count):
     codons = generate_codons()
-    return zip(range(1, combination_count + 1), codons)
+    indices = range(1, combination_count + 1)
+    return zip(indices, codons)
 
 
 if __name__ == "__main__":
