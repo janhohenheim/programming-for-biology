@@ -15,6 +15,20 @@ def count_codons_up_to(combination_count):
     return zip(indices, codons)
 
 
+def count_filtered_codons_up_to(combination_count, filter_function):
+    codons = generate_codons()
+    indices = range(1, combination_count + 1)
+    return zip(indices, filter(filter_function, codons))
+
+
+def filter_codon(codon):
+    return (codon[0] == codon[1] or codon[1] == codon[2]) and codon[0] != codon[2]
+
+
 if __name__ == "__main__":
     for i, codon in count_codons_up_to(45):
+        print(i, codon)
+
+    filtered_codons = count_filtered_codons_up_to(19, filter_codon)
+    for i, codon in filtered_codons:
         print(i, codon)
