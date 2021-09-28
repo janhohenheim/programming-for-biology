@@ -30,4 +30,8 @@ if __name__ == "__main__":
     rolls_per_round = 30
     rounds = 10
     results = simulate_dice_game(rolls_per_round, rounds)
-    print(results)
+    print(
+        f"After rolling a die {rolls_per_round} times in {rounds} game rounds, we got the following results:"
+    )
+    for i, result in enumerate(results):
+        print(f"Round {i + 1}: {result} sixes")
