@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import numpy.random as rd
-from itertools import repeat, takewhile
 
 
 def generate_coin_tosses():
