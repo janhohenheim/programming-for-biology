@@ -24,6 +24,8 @@ def count_filtered_codons_up_to(combination_count, filter_function):
 def filter_codon(codon):
     return (codon[0] == codon[1] or codon[1] == codon[2]) and codon[0] != codon[2]
 
+def filter_only_nonconsecutives(codon):
+    return (codon[0] != codon[1] and codon[1] != codon[2])
 
 if __name__ == "__main__":
     for i, codon in count_codons_up_to(45):
@@ -32,3 +34,7 @@ if __name__ == "__main__":
     filtered_codons = count_filtered_codons_up_to(19, filter_codon)
     for i, codon in filtered_codons:
         print(i, codon)
+
+    nonconsecutives = [codon for i, codon in count_filtered_codons_up_to(45, filter_only_nonconsecutives)]
+    nonconsecutives.sort()
+    print(nonconsecutives[18])
