@@ -1,0 +1,6 @@
+LOCUS CNBP1_HUMAN
+DEFINITION RecName: Beta-catenin-interacting protein 1 OS=Homo sapiens GN=CTNNBIP1 PE=1 SV=1
+ORIGIN
+        1 mnregapgks peemyiqqkv rvllmlrkmg snltaseeef lrtyagvvns qlsqlpphsi
+       61 dqgaedvvma fsrsetedrr q
+//
