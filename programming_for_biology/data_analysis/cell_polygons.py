@@ -19,8 +19,8 @@ class Disc:
     polygons: List[List[int]]
     coordinates: List[Coordinates]
 
-    def coordinates_(self, index: int) -> Coordinates:
-        return self.coordinates[self.indices[index]]
+    def coordinates_of_polygon(self, index: int) -> Coordinates:
+        return [self.coordinates[vertex] for vertex in self.polygons[index]]
 
 
 def _get_code_dir():
@@ -46,10 +46,7 @@ def read_disc(discname) -> Disc:
             return Disc(polygons, coordinates)
 
 
-def get_coordinates_of_cell(disc, cell_index):
-    return [disc.coordinates[index] for index in disc.polygons[cell_index]]
-
-
 if __name__ == "__main__":
     disc = read_disc("wd-large")
-    print(get_coordinates_of_cell(disc, 0))
+    for coordinates in disc.coordinates_of_polygon(0):
+        print(coordinates)
