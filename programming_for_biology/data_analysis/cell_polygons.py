@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 from pathlib import Path
 from os.path import join
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
+import weakref
 
 
 @dataclass(frozen=True)
@@ -14,13 +15,42 @@ class Coordinates:
         return f"(x: {self.x}, y: {self.y})"
 
 
+class Polygon:
+    pass
+
+
+@dataclass
+class Vertex:
+    index: int
+    _polygon: Polygon = field(init=False)
+
+    def init_polygon(self, polygon: Polygon) -> None:
+        self._polygon = weakref.proxy(polygon)
+
+    def coordinates(self) -> Coordinates:
+        return self._polygon._disc.coordinates[self.index]
+
+
+class Disc:
+    pass
+
+
+@dataclass
+class Polygon:
+    vertices: List[Vertex]
+    _disc: Disc = field(init=False)
+
+    def init_disc(self, disc: Disc) -> None:
+        self._disc = weakref.proxy(disc)
+
+    def coordinates(self) -> List[Coordinates]:
+        return [self._disc.coordinates[vertex.index] for vertex in self.vertices]
+
+
 @dataclass(frozen=True)
 class Disc:
-    polygons: List[List[int]]
+    polygons: List[Polygon]
     coordinates: List[Coordinates]
-
-    def coordinates_of_polygon(self, index: int) -> Coordinates:
-        return [self.coordinates[vertex] for vertex in self.polygons[index]]
 
 
 def _get_code_dir():
@@ -37,16 +67,21 @@ def read_disc(discname) -> Disc:
     with open(index_path) as index_file:
         with open(coordinate_path) as coordinate_file:
             polygons = [
-                [int(index) for index in line.split()]
+                Polygon([Vertex(int(index)) for index in line.split()])
                 for line in index_file.readlines()
             ]
             coordinates = [
                 Coordinates(*line.split()) for line in coordinate_file.readlines()
             ]
-            return Disc(polygons, coordinates)
+            disc = Disc(polygons, coordinates)
+            for polygon in disc.polygons:
+                polygon.init_disc(disc)
+                for vertex in polygon.vertices:
+                    vertex.init_polygon(polygon)
+            return disc
 
 
 if __name__ == "__main__":
     disc = read_disc("wd-large")
-    for coordinates in disc.coordinates_of_polygon(0):
+    for coordinates in disc.polygons[0].coordinates():
         print(coordinates)
