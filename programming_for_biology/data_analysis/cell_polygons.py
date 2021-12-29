@@ -4,6 +4,7 @@ from os.path import join
 from dataclasses import dataclass
 from typing import Callable, List
 from functools import reduce
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -152,18 +153,25 @@ if __name__ == "__main__":
     print("Coordinates of first polygon:")
     for coordinates in disc.polygons[0].coordinates():
         print(coordinates)
-    print("Area of first polygon:", disc.polygons[0].area())
-    print("Area of second polygon:", disc.polygons[1].area())
-    print("Area of last polygon:", disc.polygons[-1].area())
+
+    areas = [polygon.area() for polygon in disc.polygons]
+    distances = [
+        polygon.centroid().distance_to(Coordinates.center())
+        for polygon in disc.polygons
+    ]
+
+    print("Area of first polygon:", areas[0])
+    print("Area of second polygon:", areas[1])
+    print("Area of last polygon:", areas[-1])
 
     print("Centroid of first polygon:", disc.polygons[0].centroid())
     print(
         "Distance to center",
-        disc.polygons[0].centroid().distance_to(Coordinates.center()),
+        distances[0],
     )
 
     print("Centroid of second polygon:", disc.polygons[1].centroid())
     print(
         "Distance to center",
-        disc.polygons[1].centroid().distance_to(Coordinates.center()),
+        distances[1],
     )
