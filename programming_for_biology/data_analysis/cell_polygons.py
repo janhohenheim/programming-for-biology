@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 from pathlib import Path
 from os.path import join
-from dataclasses import dataclass, field
-from typing import List
-import weakref
+from dataclasses import dataclass
+from typing import Callable, List
 from functools import reduce
 
 
@@ -12,14 +11,23 @@ class Coordinates:
     x: float
     y: float
 
+    def center():
+        return Coordinates(0, 0)
+
     def __str__(self) -> str:
         return f"(x: {self.x}, y: {self.y})"
+
+    def distance_to(self, other: "Coordinates") -> float:
+        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
 
 @dataclass(frozen=True)
 class Vertex:
     index: int
     _coordinates: List[Coordinates]
+
+    def __str__(self) -> str:
+        return f"Vertex {self.index}: {self.coordinates()}"
 
     def coordinates(self) -> Coordinates:
         return self._coordinates[self.index]
@@ -35,6 +43,9 @@ class Vertex:
 class Polygon:
     vertices: List[Vertex]
     _coordinates: List[Coordinates]
+
+    def __str__(self) -> str:
+        return f"{self.vertices}"
 
     def coordinates(self) -> List[Coordinates]:
         return [self._coordinates[vertex.index] for vertex in self.vertices]
@@ -52,6 +63,48 @@ class Polygon:
             range(len(self.vertices)),
             0,
         )
+
+    def _reduce_centroid_x(self, centroid: float, index: int) -> Coordinates:
+        current_vertex = self.vertices[index]
+        last_vertex = self.vertices[index - 1]
+        return centroid + (
+            (current_vertex.x() + last_vertex.x())
+            * (
+                current_vertex.x() * last_vertex.y()
+                - last_vertex.x() * current_vertex.y()
+            )
+        )
+
+    def _curry_reduce_centroid(
+        self, get_a: Callable[[Vertex], float], get_b: Callable[[Vertex], float]
+    ) -> Coordinates:
+        def _reduce_centroid(centroid: float, index: int) -> Coordinates:
+            current_vertex = self.vertices[index]
+            last_vertex = self.vertices[index - 1]
+            return centroid + (
+                (get_a(current_vertex) + get_a(last_vertex))
+                * (
+                    get_a(current_vertex) * get_b(last_vertex)
+                    - get_a(last_vertex) * get_b(current_vertex)
+                )
+            )
+
+        return _reduce_centroid
+
+    def _get_centroid_coordinate(
+        self, get_a: Callable[[Vertex], float], get_b: Callable[[Vertex], float]
+    ) -> float:
+        factor = -1.0 / (6.0 * self.area())
+        return factor * reduce(
+            self._curry_reduce_centroid(get_a, get_b),
+            range(len(self.vertices)),
+            0.0,
+        )
+
+    def centroid(self) -> Coordinates:
+        x = self._get_centroid_coordinate(Vertex.x, Vertex.y)
+        y = self._get_centroid_coordinate(Vertex.y, Vertex.x)
+        return Coordinates(x, y)
 
 
 @dataclass(frozen=True)
@@ -102,3 +155,15 @@ if __name__ == "__main__":
     print("Area of first polygon:", disc.polygons[0].area())
     print("Area of second polygon:", disc.polygons[1].area())
     print("Area of last polygon:", disc.polygons[-1].area())
+
+    print("Centroid of first polygon:", disc.polygons[0].centroid())
+    print(
+        "Distance to center",
+        disc.polygons[0].centroid().distance_to(Coordinates.center()),
+    )
+
+    print("Centroid of second polygon:", disc.polygons[1].centroid())
+    print(
+        "Distance to center",
+        disc.polygons[1].centroid().distance_to(Coordinates.center()),
+    )
