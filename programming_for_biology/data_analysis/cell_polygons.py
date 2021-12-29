@@ -4,6 +4,7 @@ from os.path import join
 from dataclasses import dataclass, field
 from typing import List
 import weakref
+from functools import reduce
 
 
 @dataclass(frozen=True)
@@ -15,36 +16,39 @@ class Coordinates:
         return f"(x: {self.x}, y: {self.y})"
 
 
-class Polygon:
-    pass
-
-
-@dataclass
+@dataclass(frozen=True)
 class Vertex:
     index: int
-    _polygon: Polygon = field(init=False)
-
-    def init_polygon(self, polygon: Polygon) -> None:
-        self._polygon = weakref.proxy(polygon)
+    _coordinates: List[Coordinates]
 
     def coordinates(self) -> Coordinates:
-        return self._polygon._disc.coordinates[self.index]
+        return self._coordinates[self.index]
+
+    def x(self) -> float:
+        return self.coordinates().x
+
+    def y(self) -> float:
+        return self.coordinates().y
 
 
-class Disc:
-    pass
-
-
-@dataclass
+@dataclass(frozen=True)
 class Polygon:
     vertices: List[Vertex]
-    _disc: Disc = field(init=False)
-
-    def init_disc(self, disc: Disc) -> None:
-        self._disc = weakref.proxy(disc)
+    _coordinates: List[Coordinates]
 
     def coordinates(self) -> List[Coordinates]:
-        return [self._disc.coordinates[vertex.index] for vertex in self.vertices]
+        return [self._coordinates[vertex.index] for vertex in self.vertices]
+
+    def area(self) -> float:
+        return 0.5 * reduce(
+            lambda area, i: area
+            + (
+                self.vertices[i].x() * self.vertices[i - 1].y()
+                - self.vertices[i - 1].x() * self.vertices[i].y()
+            ),
+            range(len(self.vertices)),
+            0,
+        )
 
 
 @dataclass(frozen=True)
@@ -66,22 +70,22 @@ def read_disc(discname) -> Disc:
     index_path, coordinate_path = _get_wingdisc_polygon_path(discname)
     with open(index_path) as index_file:
         with open(coordinate_path) as coordinate_file:
-            polygons = [
-                Polygon([Vertex(int(index)) for index in line.split()])
-                for line in index_file.readlines()
-            ]
+
             coordinates = [
                 Coordinates(*line.split()) for line in coordinate_file.readlines()
             ]
-            disc = Disc(polygons, coordinates)
-            for polygon in disc.polygons:
-                polygon.init_disc(disc)
-                for vertex in polygon.vertices:
-                    vertex.init_polygon(polygon)
-            return disc
+            polygons = [
+                Polygon(
+                    [Vertex(int(index), coordinates) for index in line.split()],
+                    coordinates,
+                )
+                for line in index_file.readlines()
+            ]
+            return Disc(polygons, coordinates)
 
 
 if __name__ == "__main__":
     disc = read_disc("wd-large")
     for coordinates in disc.polygons[0].coordinates():
         print(coordinates)
+    print(disc.polygons[0].area())
