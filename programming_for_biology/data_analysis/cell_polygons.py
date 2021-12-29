@@ -39,13 +39,16 @@ class Polygon:
     def coordinates(self) -> List[Coordinates]:
         return [self._coordinates[vertex.index] for vertex in self.vertices]
 
+    def _reduce_area(self, area: float, index: int) -> float:
+        current_vertex = self.vertices[index]
+        last_vertex = self.vertices[index - 1]
+        return area + (
+            current_vertex.x() * last_vertex.y() - last_vertex.x() * current_vertex.y()
+        )
+
     def area(self) -> float:
         return 0.5 * reduce(
-            lambda area, i: area
-            + (
-                self.vertices[i].x() * self.vertices[i - 1].y()
-                - self.vertices[i - 1].x() * self.vertices[i].y()
-            ),
+            self._reduce_area,
             range(len(self.vertices)),
             0,
         )
@@ -70,9 +73,9 @@ def read_disc(discname) -> Disc:
     index_path, coordinate_path = _get_wingdisc_polygon_path(discname)
     with open(index_path) as index_file:
         with open(coordinate_path) as coordinate_file:
-
             coordinates = [
-                Coordinates(*line.split()) for line in coordinate_file.readlines()
+                Coordinates(*[float(coordinate) for coordinate in line.split()])
+                for line in coordinate_file.readlines()
             ]
             polygons = [
                 Polygon(
@@ -85,7 +88,17 @@ def read_disc(discname) -> Disc:
 
 
 if __name__ == "__main__":
+    coords = [Coordinates(1, 1), Coordinates(2, 3), Coordinates(4, 2)]
+    disc = Disc(
+        [Polygon([Vertex(0, coords), Vertex(1, coords), Vertex(2, coords)], coords)],
+        coords,
+    )
+    print("Area of test polygon:", disc.polygons[0].area())
+
     disc = read_disc("wd-large")
+    print("Coordinates of first polygon:")
     for coordinates in disc.polygons[0].coordinates():
         print(coordinates)
-    print(disc.polygons[0].area())
+    print("Area of first polygon:", disc.polygons[0].area())
+    print("Area of second polygon:", disc.polygons[1].area())
+    print("Area of last polygon:", disc.polygons[-1].area())
